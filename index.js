@@ -1,6 +1,6 @@
 const fs = require('fs'); // module to  acsess the filesystem , fs is object that access file system functtions
 const http = require('http'); // module to create http server
-
+const url = require('url');
 /////////////////////////////////////////
 
 // FILES
@@ -41,8 +41,19 @@ const http = require('http'); // module to create http server
 // SERVERS
 
 const server = http.createServer((req, res) => {
+  console.log(req.url);
   // req has access to req url etc
-  res.end('Hello from server');
+  const pathName = req.url;
+  if (pathName === '/' || pathName === '/overview') {
+    res.end('this is the overview');
+  } else if (pathName === '/product') {
+    res.end('this is the product');
+  } else
+    res.writeHead(404, {
+      'Content-type': 'text/html',
+      'my-own-header': 'hello',
+    }); //Header must be set before sending response
+  res.end('<h1>this page cannot be found</h1>');
 });
 
 server.listen(3000, () => {
