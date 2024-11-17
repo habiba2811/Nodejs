@@ -48,6 +48,13 @@ const server = http.createServer((req, res) => {
     res.end('this is the overview');
   } else if (pathName === '/product') {
     res.end('this is the product');
+  } else if (pathName === '/api') {
+    fs.readFile(`${__dirname}/dev-data/data.json`, 'utf-8', (err, data) => {
+      const productData = JSON.parse(data); // convert string to js object/ array
+      res.writeHead(200, { 'Content-type': 'application/json' }); // application/json for the json data // __dirname => where current file located but require function is an exception to this rule
+      res.end(data);
+    });
+    return; // add return here prevents further execution in the current request lifecycle
   } else
     res.writeHead(404, {
       'Content-type': 'text/html',
