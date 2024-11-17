@@ -40,20 +40,59 @@ const url = require('url');
 
 // SERVERS
 
+const replaceTemplate = (temp, product) => {
+  let output = temp.replace(/{%PRODUCTNAME%/g, product.productName); // global tag to replace all not just 1
+  output = output.replace(/{%IMAGE%}/g, product.image);
+  output = output.replace(/{%PRICE%}/g, product.price);
+  output = output.replace(/{%ID%}/g, product.id);
+  output = output.replace(/{%FROM%}/g, product.from);
+  output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
+  output = output.replace(/{%QUANTITY%}/g, product.quantity);
+  output = output.replace(/{%DESCRIPTION%}/g, product.description);
+
+  if (!product.organic)
+    output = output.replace(/{%NOT_ORGANIC%}/g, 'not-organic');
+
+  return output;
+};
+
+const tempOverview = fs.readFileSync(
+  `${__dirname}/templates/template-overview.html`,
+  'utf-8'
+);
+const tempCard = fs.readFileSync(
+  `${__dirname}/templates/template-card.html`,
+  'utf-8'
+);
+const tempProduct = fs.readFileSync(
+  `${__dirname}/templates/template-product.html`,
+  'utf-8'
+);
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8'); //using the sync version cause this top level code only executes once at the begining of the app
 const dataObj = JSON.parse(data); // convert string to js object/ array
 
 const server = http.createServer((req, res) => {
   const pathName = req.url;
 
+  // OVERVIEW PAGE
   if (pathName === '/' || pathName === '/overview') {
-    res.end('this is the overview');
+    res.writeHead(200, { 'Content-type': 'text/html' });
+    const cardsHtml = dataObj
+      .map((el) => replaceTemplate(tempCard, el))
+      .join(''); // using map to loop through array and return new array object , map accepts a callback function with argument of currrent element of the loop and what returns will be saved in the array with the same position, join will join all elements of the array into a string
+
+    const output = tempOverview.replace('{%PRODUCT_CARDS%}', cardsHtml);
+    res.end(output);
+    return;
+    // PRODUCTS PAGE
   } else if (pathName === '/product') {
     res.end('this is the product');
+    // API
   } else if (pathName === '/api') {
     res.writeHead(200, { 'Content-type': 'application/json' });
     res.end(data);
     return; // return statement is crucial for avoiding execution of code after the response has already been sent.
+    // NOT FOUND
   } else
     res.writeHead(404, {
       'Content-type': 'text/html',
