@@ -40,21 +40,20 @@ const url = require('url');
 
 // SERVERS
 
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8'); //using the sync version cause this top level code only executes once at the begining of the app
+const dataObj = JSON.parse(data); // convert string to js object/ array
+
 const server = http.createServer((req, res) => {
-  console.log(req.url);
-  // req has access to req url etc
   const pathName = req.url;
+
   if (pathName === '/' || pathName === '/overview') {
     res.end('this is the overview');
   } else if (pathName === '/product') {
     res.end('this is the product');
   } else if (pathName === '/api') {
-    fs.readFile(`${__dirname}/dev-data/data.json`, 'utf-8', (err, data) => {
-      const productData = JSON.parse(data); // convert string to js object/ array
-      res.writeHead(200, { 'Content-type': 'application/json' }); // application/json for the json data // __dirname => where current file located but require function is an exception to this rule
-      res.end(data);
-    });
-    return; // add return here prevents further execution in the current request lifecycle
+    res.writeHead(200, { 'Content-type': 'application/json' });
+    res.end(data);
+    return; // return statement is crucial for avoiding execution of code after the response has already been sent.
   } else
     res.writeHead(404, {
       'Content-type': 'text/html',
