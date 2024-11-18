@@ -1,6 +1,7 @@
 const fs = require('fs'); // module to  acsess the filesystem , fs is object that access file system functtions
 const http = require('http'); // module to create http server
 const url = require('url');
+const slugify = require('slugify'); // slug is the last part of url contain a unique string that identify recourse that the website is displaying
 const replaceTemplate = require('./modules/replaceTemplate');
 /////////////////////////////////////////
 
@@ -39,7 +40,7 @@ const replaceTemplate = require('./modules/replaceTemplate');
 
 /////////////////////////////////////////
 
-// SERVERS
+// SERVER
 
 const tempOverview = fs.readFileSync(
   `${__dirname}/templates/template-overview.html`,
@@ -53,8 +54,12 @@ const tempProduct = fs.readFileSync(
   `${__dirname}/templates/template-product.html`,
   'utf-8'
 );
+
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8'); //using the sync version cause this top level code only executes once at the begining of the app
 const dataObj = JSON.parse(data); // convert string to js object/ array
+const slugs = dataObj.map((el) => slugify(el.productName, { lower: true }));
+console.log(slugs);
+console.log(slugify('Fresh Avocado', { lower: true }));
 
 const server = http.createServer((req, res) => {
   const { query, pathname } = url.parse(req.url, true); // passing true to parse query to obj
