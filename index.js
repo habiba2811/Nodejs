@@ -21,21 +21,38 @@ const writeFilePro = (file, data) => {
   });
 };
 
+const getDogPic = async () => {
+  try {
+    const data = await readFilePro(`${__dirname}/dog.txt`);
+    console.log(`breed: ${data}`);
+    const res = await superagent.get(
+      `https://dog.ceo/api/breed/${data}/images/random`
+    );
+    console.log(res.body.message);
+    await writeFilePro(`${__dirname}/dog-img.txt`, res.body.message);
+    console.log('All tasks completed successfully!');
+  } catch (err) {
+    console.log(err.message);
+  }
+};
+
+getDogPic();
+
 // Begin the promise chain by reading the 'dog.txt' file.
-readFilePro(`${__dirname}/dog.txt`) // '__dirname' ensures the path is relative to the current directory.
-  .then((data) => {
-    console.log(`breed: ${data}`); // Log the breed name read from the file.
-    // Use 'superagent' to fetch a random dog image URL for the given breed.
-    return superagent.get(`https://dog.ceo/api/breed/${data}/images/random`);
-  })
-  .then((res) => {
-    console.log(res.body.message); // Log the random dog image URL fetched from the API.
-    // Write the image URL to a new file named 'dog-img.txt'.
-    return writeFilePro(`${__dirname}/dog-img.txt`, res.body.message);
-  })
-  .then(() => {
-    console.log('All tasks completed successfully!'); // Log a success message after writing the file.
-  })
-  .catch((err) => {
-    console.log(err.message); // Catch and log any errors that occur in the promise chain.
-  });
+// readFilePro(`${__dirname}/dog.txt`) // '__dirname' ensures the path is relative to the current directory.
+//   .then((data) => {
+//     console.log(`breed: ${data}`); // Log the breed name read from the file.
+//     // Use 'superagent' to fetch a random dog image URL for the given breed.
+//     return superagent.get(`https://dog.ceo/api/breed/${data}/images/random`);
+//   })
+//   .then((res) => {
+//     console.log(res.body.message); // Log the random dog image URL fetched from the API.
+//     // Write the image URL to a new file named 'dog-img.txt'.
+//     return writeFilePro(`${__dirname}/dog-img.txt`, res.body.message);
+//   })
+//   .then(() => {
+//     console.log('All tasks completed successfully!'); // Log a success message after writing the file.
+//   })
+//   .catch((err) => {
+//     console.log(err.message); // Catch and log any errors that occur in the promise chain.
+//   });
