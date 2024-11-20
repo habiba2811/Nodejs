@@ -1,18 +1,34 @@
 const fs = require('fs');
 const express = require('express');
-
+const morgan = require('morgan');
 const app = express();
 
+// 1) middlewares
+
+app.use(morgan('dev')); // GET /api/v1/tours 200 5.009 ms - 8673
+
 app.use(express.json()); // express.json is middleware function that modify the incomming request data used for the post request
+app.use((req, res, next) => {
+  // it applies to all requests because the order of the code
+  console.log('hello from middleware 🙌');
+  next(); // call next to so the next middleware is called
+});
+
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString(); //current time of request
+  next();
+});
 
 const port = 3000;
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
 
+// 2) route handlers
 const getAllTours = (req, res) => {
   // good to have versions of api
   res.status(200).json({
+    requestTime: req.requestTime,
     results: tours.length,
     status: 'success',
     data: tours,
@@ -89,6 +105,8 @@ const createTour = (req, res) => {
   );
 };
 
+// 3) routes
+
 // app.get('/api/v1/tours', getAllTours);
 // app.get('/api/v1/tours/:id', getTour);
 // app.post('/api/v1/tours', createTour);
@@ -101,6 +119,8 @@ app
   .get(getTour)
   .delete(deleteTour)
   .patch(updateTour);
+
+// 4) start server
 
 app.listen(port, () => {
   console.log(`app listening on ${port}`);
