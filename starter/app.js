@@ -9,16 +9,17 @@ const port = 3000;
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
-app.get('/api/v1/tours', (req, res) => {
+
+const getAllTours = (req, res) => {
   // good to have versions of api
   res.status(200).json({
     results: tours.length,
     status: 'success',
     data: tours,
   });
-});
+};
 
-app.get('/api/v1/tours/:id', (req, res) => {
+const getTour = (req, res) => {
   console.log(req.params);
 
   const id = req.params.id * 1;
@@ -34,9 +35,8 @@ app.get('/api/v1/tours/:id', (req, res) => {
     status: 'success',
     data: tour,
   });
-});
-
-app.patch('/api/v1/tours/:id', (req, res) => {
+};
+const updateTour = (req, res) => {
   const id = req.params.id * 1;
   const tour = tours.find((el) => el.id === id);
   if (!tour)
@@ -52,9 +52,9 @@ app.patch('/api/v1/tours/:id', (req, res) => {
       tour: updatedTour,
     },
   });
-});
+};
 
-app.delete('/api/v1/tours/:id', (req, res) => {
+const deleteTour = (req, res) => {
   const id = req.params.id * 1;
   if (id > tours.length) {
     return res.status(404).json({
@@ -66,9 +66,9 @@ app.delete('/api/v1/tours/:id', (req, res) => {
     status: 'success',
     message: 'null',
   });
-});
+};
 
-app.post('/api/v1/tours', (req, res) => {
+const createTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1;
   const newTour = Object.assign({ id: newId }, req.body); // the body we sent + new id created , use obj.assign to create a new obj be merging 2 existing obj ( id, req.body)
 
@@ -87,7 +87,20 @@ app.post('/api/v1/tours', (req, res) => {
       });
     }
   );
-});
+};
+
+// app.get('/api/v1/tours', getAllTours);
+// app.get('/api/v1/tours/:id', getTour);
+// app.post('/api/v1/tours', createTour);
+// app.patch('/api/v1/tours/:id', updateTour);
+// app.delete('/api/v1/tours/:id', deleteTour);
+
+app.route('/api/v1/tours').post(createTour).get(getAllTours);
+app
+  .route('/api/v1/tours/:id')
+  .get(getTour)
+  .delete(deleteTour)
+  .patch(updateTour);
 
 app.listen(port, () => {
   console.log(`app listening on ${port}`);
