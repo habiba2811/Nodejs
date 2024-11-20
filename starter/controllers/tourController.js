@@ -3,6 +3,18 @@ const fs = require('fs');
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
 );
+exports.checkId = (req, res, next, val) => {
+  console.log(`Tour id is ${val}`);
+  const id = req.params.id * 1;
+  if (id > tours.length) {
+    return res.status(404).json({
+      // after sending the response the function then returns and execute the next() function
+      status: 'fail',
+      message: 'not found',
+    });
+  }
+  next();
+};
 
 exports.getAllTours = (req, res) => {
   // good to have versions of api
@@ -15,17 +27,11 @@ exports.getAllTours = (req, res) => {
 };
 
 exports.getTour = (req, res) => {
-  console.log(req.params);
-
   const id = req.params.id * 1;
+
+  console.log(req.params);
   const tour = tours.find((el) => el.id === id);
 
-  if (!tour) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'not found',
-    });
-  }
   res.status(200).json({
     status: 'success',
     data: tour,
@@ -34,11 +40,6 @@ exports.getTour = (req, res) => {
 exports.updateTour = (req, res) => {
   const id = req.params.id * 1;
   const tour = tours.find((el) => el.id === id);
-  if (!tour)
-    return res.status(404).json({
-      status: 'fail',
-      message: 'not found',
-    });
   const updatedTour = { ...tour, ...req.body }; // spread operator to merge the 2 objects
   tours[tours.findIndex((el) => el.id === id)] = updatedTour;
   res.status(200).json({
@@ -50,13 +51,6 @@ exports.updateTour = (req, res) => {
 };
 
 exports.deleteTour = (req, res) => {
-  const id = req.params.id * 1;
-  if (id > tours.length) {
-    return res.status(404).json({
-      status: 'fail',
-      message: 'not found',
-    });
-  }
   res.status(204).json({
     status: 'success',
     message: 'null',
