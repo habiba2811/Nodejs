@@ -3,6 +3,18 @@ const fs = require('fs');
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
 );
+
+exports.checkBody = (req, res, next) => {
+  if (!req.body.name || !req.body.price) {
+    return res.status(400).json({
+      status: 'fail',
+      message: 'missing name or price',
+    });
+  }
+
+  next();
+};
+
 exports.checkId = (req, res, next, val) => {
   console.log(`Tour id is ${val}`);
   const id = req.params.id * 1;
