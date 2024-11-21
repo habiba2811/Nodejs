@@ -3,7 +3,25 @@ const Tour = require("./../models/tourModel");
 
 exports.getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find();
+    // BUILD QUERY
+    const queryObj = { ...req.query }; //shallow copy of query object
+    const excludedFields = ["page", "sort", "limit", "fields"];
+    excludedFields.forEach((el) => delete queryObj[el]); // delete fields from query object
+
+    console.log(req.query, queryObj); // obj with data from query string
+
+    const query = Tour.find(queryObj); // returns a query
+
+    // const query =  Tour.find() we can chain because its a query
+    //   .where("duration")
+    //   .equals(5)
+    //   .where("difficulty")
+    //   .equals("easy");
+
+    // EXECUTE QUERY
+    const tours = await query;
+
+    // SEND RESPONSE
     res.status(200).json({
       status: "success",
       results: tours.length,
