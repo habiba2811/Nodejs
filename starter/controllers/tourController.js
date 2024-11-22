@@ -32,11 +32,6 @@ exports.getAllTours = async (req, res) => {
       message: error,
     });
   }
-  // const query =  Tour.find() we can chain because its a query
-  //   .where("duration")
-  //   .equals(5)
-  //   .where("difficulty")
-  //   .equals("easy");
 };
 
 exports.getTour = async (req, res) => {
@@ -90,13 +85,50 @@ exports.deleteTour = async (req, res) => {
 
 exports.createTour = async (req, res) => {
   try {
-    // const newTour = new Tour({})
-    // newTour.save()
     const newTour = await Tour.create(req.body);
     res.status(201).json({
       status: "success",
       data: {
         tour: newTour,
+      },
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: "fail",
+      message: error,
+    });
+  }
+};
+
+exports.getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      // if not using await will return aggregate obj, using await returns res
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } }, // $match filters the documents in the collection based on the specified condition.
+      },
+      {
+        $group: {
+          _id: { $toUpper: "$difficulty" }, //what we want to group by
+          numTours: { $sum: 1 }, // how many documents in the group
+          numRatings: { $sum: "$ratingsQuantity" },
+          avgRating: { $avg: "$ratingsAverage" },
+          avgPrice: { $avg: "$price" },
+          minPrice: { $min: "$price" },
+          maxPrice: { $max: "$price" },
+        },
+      },
+      {
+        $sort: { avgPrice: 1 },
+      },
+      // {
+      //   $match: { _id: { $ne: "EASY" } }, // != easy, we can repeat stages
+      // },
+    ]);
+    res.status(200).json({
+      status: "success",
+      data: {
+        stats,
       },
     });
   } catch (error) {
