@@ -1,9 +1,12 @@
 const express = require("express");
 const morgan = require("morgan");
 
-const app = express();
+const AppError = require("./utils/appError");
+const globalErrorHandler = require("./controllers/errorController");
 const tourRouter = require("./routes/tourRoutes");
 const userRouter = require("./routes/userRoutes");
+
+const app = express();
 
 // 1) middlewares
 
@@ -24,26 +27,9 @@ app.use((req, res, next) => {
 app.use("/api/v1/tours", tourRouter);
 app.use("/api/v1/users", userRouter);
 app.all("*", (req, res, next) => {
-  // catch all route that passed the above routes and wasnt defined
-  // res.status(404).json({
-  //   status: "fail",
-  //   message: `Can't find ${req.originalUrl} on this server!`,
-  // });
-  const err = new Error(`Can't find ${req.originalUrl} on this server!`);
-  err.status = "fail";
-  err.statusCode = 404;
-  next(err); // pass error to global error handler
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404)); // pass error to global error handler
 });
 
-app.use((err, req, res, next) => {
-  // global error handler
-  err.statusCode = err.statusCode || 500; // default status code
-  err.status = err.status || "error"; // default status
-
-  res.status(err.statusCode).json({
-    status: err.status,
-    message: err.message,
-  });
-});
+app.use(globalErrorHandler);
 
 module.exports = app;
