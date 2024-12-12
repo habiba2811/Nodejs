@@ -1,3 +1,4 @@
+const crypto = require("crypto"); // built-in node module
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
@@ -23,12 +24,12 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, "A user must have a password"],
-    minlength: 8,
+    minlength: [8, "Password must be longer than 8 characters"],
     select: false,
   },
   confirmPassword: {
     type: String,
-    required: [true, "A user must have a password"],
+    required: [true, "Please confirm your password"],
     // this only works on CREATE and SAVE
     validate: {
       validator: function (el) {
@@ -38,6 +39,13 @@ const userSchema = new mongoose.Schema({
     },
   },
   passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 userSchema.pre("save", async function (next) {
@@ -45,6 +53,12 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 12); // 12 is the salt rounds
   this.confirmPassword = undefined;
+  next();
+});
+
+userSchema.pre("save", function (next) {
+  if (!this.isModified("password") || this.isNew) return next();
+  this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
@@ -65,6 +79,20 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   }
   // false means not changed
   return false;
+};
+
+userSchema.methods.createPasswordResetToken = function () {
+  // modify it but not save
+  const resetToken = crypto.randomBytes(32).toString("hex"); // 32 random bytes random token, no need to use jwt token
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  console.log({ resetToken }, this.passwordResetToken); // { } = object the variable name + value
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  return resetToken; // send to user email unencrypted reset token, and encrypt it in db
 };
 
 const User = mongoose.model("User", userSchema);
